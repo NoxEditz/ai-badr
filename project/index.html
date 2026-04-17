@@ -1389,8 +1389,8 @@ function buildMessageContent(text, images) {
   if (images && images.length > 0) {
     images.forEach(img => {
       parts.push({
-        inlineData: {
-          mimeType: img.mediaType,
+        inline_data: {
+          mime_type: img.mediaType,
           data: img.data
         }
       });
@@ -1925,18 +1925,21 @@ async function sendMessage() {
   appendMessage(userMsg);
   updateChatTitle(chat, text || '📎 صورة');
 
-  // API messages format
-  const apiMessages = chat.messages.slice(0, -1).map(m => ({
+  // API messages format - slice to last 10 to save quota
+  const historyLimit = 10;
+  const history = chat.messages.slice(0, -1).slice(-historyLimit);
+  
+  const apiMessages = history.map(m => ({
     role:    m.role,
     content: m.images?.length
       ? buildMessageContent(m.content, m.images)
       : m.content,
   }));
 
-  // Add system prompt
+  // Add system prompt at the very beginning
   apiMessages.unshift({ role: 'system', content: SYSTEM_PROMPT });
 
-  // add current user message
+  // Add current user message
   apiMessages.push({
     role:    'user',
     content: images.length
@@ -2160,8 +2163,16 @@ async function sendVoiceMessage(base64, mimeType) {
   const typingEl = appendTypingIndicator();
 
   try {
+    // Include some history for voice context too (last 4 messages)
+    const historyLimit = 4;
+    const history = chat.messages.slice(0, -1).slice(-historyLimit).map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
     // Ask AI to BOTH transcribe AND reply in JSON format
     const transcribeMessages = [
+      ...history,
       {
         role: 'user',
         content: [
@@ -2581,7 +2592,14 @@ sendVoiceMessage = async function(base64, mimeType) {
 
   // Live mode: transcribe + reply via AI
   const chat = activeChat();
+  const historyLimit = 4;
+  const history = chat.messages.slice(-historyLimit).map(m => ({
+    role: m.role,
+    content: m.content
+  }));
+
   const liveMessages = [
+    ...history,
     {
       role: 'user',
       content: [
