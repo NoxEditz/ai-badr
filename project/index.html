@@ -134,16 +134,11 @@ a { color: var(--ng); }
   user-select: none; -webkit-user-select: none;
   z-index: 0;
 }
-.slider-label {
-  font-size: 15px; color: var(--txt2); font-weight: 600;
-  letter-spacing: 1px; text-transform: uppercase;
-  animation: shimmerText 1.8s ease-in-out infinite;
-}
 .slider-handle-wrap {
   position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
   width: 48px; height: 48px; cursor: grab; touch-action: none;
-  z-index: 10; user-select: none; -webkit-user-select: none;
-  pointer-events: auto;
+  z-index: 100 !important; user-select: none; -webkit-user-select: none;
+  pointer-events: auto !important;
 }
 .slider-handle {
   width: 100%; height: 100%; border-radius: var(--radius);
@@ -152,35 +147,26 @@ a { color: var(--ng); }
   font-size: 22px; color: #001a00; font-weight: 700;
   box-shadow: 0 4px 20px rgba(0,255,65,.4), inset 0 0 15px rgba(255,255,255,.2);
   transition: transform .15s ease; user-select: none; -webkit-user-select: none;
-  pointer-events: auto;
+  pointer-events: auto !important; z-index: 101 !important;
 }
 .slider-handle:active { cursor: grabbing; transform: scale(.95); }
 .slider-progress {
   position: absolute; left: 0; top: 0; height: 100%;
   background: linear-gradient(90deg, rgba(0,255,65,.08), rgba(0,255,65,.15));
-  border-radius: var(--radius-lg); pointer-events: none;
+  border-radius: var(--radius-lg); pointer-events: none !important; z-index: 1;
   transition: width .1s ease;
-}
-.slider-arrow-icon {
-  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-  color: var(--txt3); font-size: 18px; animation: bounceRight 1.4s ease-in-out infinite;
-  pointer-events: none; z-index: 1;
 }
 .slider-label {
   font-size: 15px; color: var(--txt2); font-weight: 600;
   letter-spacing: 1px; text-transform: uppercase;
   animation: shimmerText 1.8s ease-in-out infinite;
-  pointer-events: none; z-index: 1;
+  pointer-events: none !important; z-index: 2;
 }
-.slider-progress {
-  position: absolute; left: 0; top: 0; height: 100%;
-  background: linear-gradient(90deg, rgba(0,255,65,.08), rgba(0,255,65,.15));
-  border-radius: var(--radius-lg); pointer-events: none;
-  transition: width .1s ease;
-  z-index: 2;
+.slider-arrow-icon {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--txt3); font-size: 18px; animation: bounceRight 1.4s ease-in-out infinite;
+  pointer-events: none !important; z-index: 2;
 }
-
-/* AI Intro Modal */
 #ai-intro-modal {
   position: fixed; inset: 0; z-index: 150;
   display: flex; align-items: center; justify-content: center;
@@ -1603,135 +1589,75 @@ function initOnboarding() {
   
   let isDragging = false;
   let startX = 0;
-  const maxSlide = 240; // Max distance slider can move
+  const sliderTrack = document.getElementById("slider-track");
+  const maxSlide = sliderTrack ? sliderTrack.offsetWidth - 64 : 240;
 
   function completeSlide() {
-    $sliderHandleWrap.style.transition = 'transform .4s cubic-bezier(.4,0,.2,1)';
+    console.log("✅ Slide completed!");
+    $sliderHandleWrap.style.transition = "transform .4s cubic-bezier(.4,0,.2,1)";
     $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${maxSlide}px)`;
-    $sliderProgress.style.width = '100%';
+    $sliderProgress.style.width = "100%";
 
-    // Fade out onboarding screen with blur effect
     setTimeout(() => {
-      $onboarding.classList.add('hidden');
-
-      // Show AI intro modal with blur backdrop
+      $onboarding.classList.add("hidden");
       setTimeout(() => {
-        $aiIntroModal.classList.add('visible');
+        $aiIntroModal.classList.add("visible");
       }, 100);
     }, 300);
   }
 
-  // Mouse events
-  $sliderHandleWrap.addEventListener('mousedown', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
+  function handleStart(e) {
     isDragging = true;
-    startX = e.clientX;
-    $sliderHandle.style.transition = 'none';
-    $sliderHandleWrap.style.transition = 'none';
-    
-    function onMouseMove(moveEvent) {
-      if (!isDragging) return;
-      moveEvent.preventDefault();
-      const deltaX = moveEvent.clientX - startX;
-      let newX = deltaX;
-      if (newX < 0) newX = 0;
-      if (newX > maxSlide) newX = maxSlide;
+    startX = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
+    $sliderHandle.style.transition = "none";
+    $sliderHandleWrap.style.transition = "none";
+    console.log("🖱️ Drag started at", startX);
+  }
 
-      $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
-      $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
-    }
-    
-    function onMouseUp() {
-      if (!isDragging) return;
-      isDragging = false;
-      $sliderHandle.style.transition = 'transform .15s ease';
-
-      const currentTransform = $sliderHandleWrap.style.transform;
-      const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
-      const currentX = match ? parseFloat(match[1]) : 0;
-
-      if (currentX >= maxSlide - 20) {
-        completeSlide();
-      } else {
-        $sliderHandleWrap.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
-        $sliderHandleWrap.style.transform = 'translateY(-50%) translateX(0)';
-        $sliderProgress.style.transition = 'width .3s ease';
-        $sliderProgress.style.width = '0%';
-      }
-      
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    }
-    
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-  });
-
-  // Touch events
-  $sliderHandleWrap.addEventListener('touchstart', function(e) {
+  function handleMove(e) {
+    if (!isDragging) return;
     e.preventDefault();
-    isDragging = true;
-    startX = e.touches[0].clientX;
-    $sliderHandle.style.transition = 'none';
-    $sliderHandleWrap.style.transition = 'none';
-    
-    function onTouchMove(moveEvent) {
-      if (!isDragging) return;
-      moveEvent.preventDefault();
-      const deltaX = moveEvent.touches[0].clientX - startX;
-      let newX = deltaX;
-      if (newX < 0) newX = 0;
-      if (newX > maxSlide) newX = maxSlide;
+    const x = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
+    const deltaX = x - startX;
+    let newX = Math.max(0, Math.min(deltaX, maxSlide));
 
-      $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
-      $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
+    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
+    $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
+
+    if (newX >= maxSlide * 0.9) {
+      handleEnd();
+      completeSlide();
     }
-    
-    function onTouchEnd() {
-      if (!isDragging) return;
-      isDragging = false;
-      $sliderHandle.style.transition = 'transform .15s ease';
+  }
 
-      const currentTransform = $sliderHandleWrap.style.transform;
-      const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
-      const currentX = match ? parseFloat(match[1]) : 0;
+  function handleEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    $sliderHandle.style.transition = "transform .15s ease";
 
-      if (currentX >= maxSlide - 20) {
-        completeSlide();
-      } else {
-        $sliderHandleWrap.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
-        $sliderHandleWrap.style.transform = 'translateY(-50%) translateX(0)';
-        $sliderProgress.style.transition = 'width .3s ease';
-        $sliderProgress.style.width = '0%';
-      }
-      
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
+    const currentTransform = $sliderHandleWrap.style.transform;
+    const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
+    const currentX = match ? parseFloat(match[1]) : 0;
+
+    if (currentX < maxSlide * 0.9) {
+      $sliderHandleWrap.style.transition = "transform .3s cubic-bezier(.4,0,.2,1)";
+      $sliderHandleWrap.style.transform = "translateY(-50%) translateX(0)";
+      $sliderProgress.style.transition = "width .3s ease";
+      $sliderProgress.style.width = "0%";
     }
-    
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd);
-  }, { passive: false });
-  // Intro start button
-  $introStartBtn.addEventListener('click', () => {
-    localStorage.setItem('badr_intro_seen', 'true');
-    $aiIntroModal.classList.remove('visible');
-    setTimeout(() => {
-      launchApp();
-    }, 300);
-  });
-}
+  }
 
-/* ═══════════════════════════
-   SETUP / AUTH
-═══════════════════════════ */
-function initSetup() {
-  // API key is now handled server-side via Vercel environment variable
-  // Initialize onboarding first (slide to unlock + intro)
-  initOnboarding();
-}
+  // Attach events to handle wrapper
+  $sliderHandleWrap.addEventListener("mousedown", handleStart);
+  $sliderHandleWrap.addEventListener("touchstart", handleStart, { passive: false });
 
+  // Attach move/end to window for smooth dragging
+  window.addEventListener("mousemove", handleMove);
+  window.addEventListener("touchmove", handleMove, { passive: false });
+  window.addEventListener("mouseup", handleEnd);
+  window.addEventListener("touchend", handleEnd);
+
+  console.log("🚀 Slider initialized. Max slide:", maxSlide);
 $setupInput.addEventListener('input', () => {
   const v = $setupInput.value.trim();
   $setupBtn.disabled = !validateApiKey(v);
