@@ -1586,56 +1586,56 @@ function initOnboarding() {
   $aiIntroModal.classList.remove('visible');
   
   let isDragging = false;
+  let startX = 0;
   const maxSlide = 240; // Max distance slider can move
-  
+
   function completeSlide() {
     $sliderHandleWrap.style.transition = 'transform .4s cubic-bezier(.4,0,.2,1)';
     $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${maxSlide}px)`;
     $sliderProgress.style.width = '100%';
-    
+
     // Fade out onboarding screen with blur effect
     setTimeout(() => {
       $onboarding.classList.add('hidden');
-      
+
       // Show AI intro modal with blur backdrop
       setTimeout(() => {
         $aiIntroModal.classList.add('visible');
       }, 100);
     }, 300);
   }
-  
+
   // Mouse events
   $sliderHandleWrap.addEventListener('mousedown', e => {
     e.preventDefault();
     e.stopPropagation();
     isDragging = true;
-    const rect = $sliderHandleWrap.parentElement.getBoundingClientRect();
-    startX = e.clientX - rect.left;
+    startX = e.clientX;
     $sliderHandle.style.transition = 'none';
     $sliderHandleWrap.style.transition = 'none';
   });
-  
+
   document.addEventListener('mousemove', e => {
     if (!isDragging) return;
     e.preventDefault();
-    const rect = $sliderHandleWrap.parentElement.getBoundingClientRect();
-    let newX = e.clientX - rect.left - 24;
+    const deltaX = e.clientX - startX;
+    let newX = deltaX;
     if (newX < 0) newX = 0;
     if (newX > maxSlide) newX = maxSlide;
-    
+
     $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
     $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
   });
-  
+
   document.addEventListener('mouseup', () => {
     if (!isDragging) return;
     isDragging = false;
     $sliderHandle.style.transition = 'transform .15s ease';
-    
+
     const currentTransform = $sliderHandleWrap.style.transform;
     const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
     const currentX = match ? parseFloat(match[1]) : 0;
-    
+
     if (currentX >= maxSlide - 20) {
       completeSlide();
     } else {
@@ -1645,38 +1645,37 @@ function initOnboarding() {
       $sliderProgress.style.width = '0%';
     }
   });
-  
+
   // Touch events
   $sliderHandleWrap.addEventListener('touchstart', e => {
     e.preventDefault();
     isDragging = true;
-    const rect = $sliderHandleWrap.parentElement.getBoundingClientRect();
-    startX = e.touches[0].clientX - rect.left;
+    startX = e.touches[0].clientX;
     $sliderHandle.style.transition = 'none';
     $sliderHandleWrap.style.transition = 'none';
   }, { passive: false });
-  
+
   document.addEventListener('touchmove', e => {
     if (!isDragging) return;
     e.preventDefault();
-    const rect = $sliderHandleWrap.parentElement.getBoundingClientRect();
-    let newX = e.touches[0].clientX - rect.left - 24;
+    const deltaX = e.touches[0].clientX - startX;
+    let newX = deltaX;
     if (newX < 0) newX = 0;
     if (newX > maxSlide) newX = maxSlide;
-    
+
     $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
     $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
   }, { passive: false });
-  
+
   document.addEventListener('touchend', () => {
     if (!isDragging) return;
     isDragging = false;
     $sliderHandle.style.transition = 'transform .15s ease';
-    
+
     const currentTransform = $sliderHandleWrap.style.transform;
     const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
     const currentX = match ? parseFloat(match[1]) : 0;
-    
+
     if (currentX >= maxSlide - 20) {
       completeSlide();
     } else {
@@ -1686,7 +1685,6 @@ function initOnboarding() {
       $sliderProgress.style.width = '0%';
     }
   });
-  
   // Intro start button
   $introStartBtn.addEventListener('click', () => {
     localStorage.setItem('badr_intro_seen', 'true');
