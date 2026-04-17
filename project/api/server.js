@@ -1,18 +1,32 @@
-export const config = { runtime: 'edge' };
+export default async function handler(req, res) {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'OPTIONS,POST');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-export default async function handler(req) {
-  const { messages } = await req.json();
-  const key = process.env.GOOGLE_API_KEY;
-  
-  if (!key) return new Response(JSON.stringify({ error: 'Missing GOOGLE_API_KEY in Vercel' }), { status: 500 });
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-  // Gemini doesn't support 'system' role in the contents array. 
-  // We filter it out and rely on the model understanding context, 
-  // or you can prepend it to the first user message if needed.
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  const { messages } = req.body;
+
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: "Invalid chat history received." });
+  }
+
+  const API_KEY = process.env.GOOGLE_API_KEY;
+
+  if (!API_KEY) {
+    return res.status(500).json({ error: "Missing GOOGLE_API_KEY on Vercel." });
+  }
+
   const systemMsg = messages.find(m => m.role === 'system');
-  const system_instruction = systemMsg ? {
-    parts: [{ text: systemMsg.content }]
-  } : undefined;
+  const SYS_PROMPT = systemMsg ? systemMsg.content : "أنت مساعد ذكي.";
 
   const contents = messages
     .filter(m => m.role !== 'system')
@@ -29,18 +43,35 @@ export default async function handler(req) {
       };
     });
 
-  const body = { contents };
-  if (system_instruction) {
-    body.system_instruction = system_instruction;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents,
+        system_instruction: { parts: [{ text: SYS_PROMPT }] },
+        generationConfig: { 
+          maxOutputTokens: 2048, 
+          temperature: 0.85 
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+       console.error("API Error Details:", data);
+       return res.status(500).json({ error: data.error?.message || "Google API Error" });
+    }
+
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "عذراً، لم أستطع فهم ذلك.";
+    
+    res.status(200).json({ reply });
+
+  } catch (error) {
+    console.error("Server Error:", error);
+    res.status(500).json({ error: "حدث خطأ في الخادم الداخلي." });
   }
-
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=${key}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-
-  return new Response(response.body, {
-    headers: { 'Content-Type': 'text/event-stream' }
-  });
 }
