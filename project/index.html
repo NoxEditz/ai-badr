@@ -168,7 +168,7 @@ a { color: var(--ng); }
   pointer-events: none !important; z-index: 2;
 }
 #ai-intro-modal {
-  position: fixed; inset: 0; z-index: 150;
+  position: fixed; inset: 0; z-index: 250; /* Higher than onboarding (200) */
   display: flex; align-items: center; justify-content: center;
   background: rgba(2,12,4,.85); backdrop-filter: blur(15px);
   opacity: 0; pointer-events: none; transition: opacity .5s ease;
@@ -1483,14 +1483,14 @@ function initOnboarding() {
     $sliderProgress.style.width = "100%";
 
     setTimeout(() => {
-      // Logic: If they've seen the intro before, go straight to app. 
-      // Otherwise, show the intro modal.
+      // ALWAYS hide onboarding once slide is done
+      $onboarding.classList.add("hidden");
+      $app.classList.remove("hidden");
+
       if (hasSeenIntro) {
-        $onboarding.classList.add("hidden");
-        $app.classList.remove("hidden");
         launchApp();
       } else {
-        // Modal will stay visible until they click startBtn
+        // Show guide if first time
         $aiIntroModal.classList.add("visible");
       }
     }, 300);
