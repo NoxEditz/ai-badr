@@ -1976,9 +1976,6 @@ async function sendVoiceMessage(base64, mimeType) {
     content: m.audio ? buildVoiceContent(m.content, m.audio) : (m.images?.length ? buildMessageContent(m.content, m.images) : m.content),
   }));
 
-  apiMessages.unshift({ role: 'system', content: SYSTEM_PROMPT });
-  
-  // Current voice message
   apiMessages.push({
     role:    'user',
     content: buildVoiceContent('الرجاء الاستماع لهذه الرسالة الصوتية والرد عليها بالعامية المصرية.', voiceMsg.audio)
@@ -1992,31 +1989,21 @@ async function sendVoiceMessage(base64, mimeType) {
   try {
     let fullText = '';
     let aiMsgEl  = null;
-    let aiBubble = null;
-
-    for await (const chunk of streamChat({ messages: apiMessages })) {
-      fullText += chunk;
-      if (!aiMsgEl) {
-        typingEl.remove();
-        const aiMsg = { id: genId(), role: 'assistant', content: '', time: now() };
-        chat.messages.push(aiMsg);
-        aiMsgEl = buildMessageEl(aiMsg);
-        $msgList.appendChild(aiMsgEl);
-        aiBubble = aiMsgEl.querySelector('.msg-bubble');
-        aiBubble.classList.add('streaming', 'cursor');
-      }
-      aiBubble.innerHTML = renderMarkdown(fullText);
-      scrollToBottom(false);
-    }
-
-    if (aiMsgEl) {
-      const last = chat.messages[chat.messages.length - 1];
-      last.content = fullText;
-      aiBubble.classList.remove('streaming', 'cursor');
-      Storage.saveChats(state.chats);
-    }
-  } catch (err) {
+    const reply = await fetchChat({ messages: apiMessages });
     typingEl.remove();
+
+    const aiMsg = {
+      id:      genId(),
+      role:    'assistant',
+      content: reply,
+      time:    now(),
+    };
+    chat.messages.push(aiMsg);
+    appendMessage(aiMsg);
+    Storage.saveChats(state.chats);
+    scrollToBottom(true);
+  } catch (err) {
+    if (typingEl && typingEl.parentNode) typingEl.remove();
     showToast('❌ حصلت مشكلة أثناء معالجة الصوت', true);
   } finally {
     state.streaming = false;
@@ -2027,7 +2014,7 @@ async function sendVoiceMessage(base64, mimeType) {
 function buildVoiceContent(text, audio) {
   return [
     { text: text },
-    { inlineData: { mimeType: audio.mimeType, data: audio.data } }
+    { inline_data: { mime_type: audio.mimeType, data: audio.data } }
   ];
 }
 
