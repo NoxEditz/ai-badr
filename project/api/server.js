@@ -20,11 +20,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing GOOGLE_API_KEY on Vercel." });
   }
 
-  // Extract the system prompt
+  // Extract instructions
   const systemMsg = messages.find(m => m.role === 'system');
   const SYS_TEXT = systemMsg ? systemMsg.content : "أنت مساعد ذكي.";
 
-  // Convert messages to Gemini format (user -> user, assistant -> model)
+  // Format message history
   const userMessages = messages
     .filter(m => m.role !== 'system')
     .map(m => {
@@ -40,19 +40,15 @@ export default async function handler(req, res) {
       };
     });
 
-  /**
-   * UNIVERSAL WORKAROUND:
-   * Since 'system_instruction' field is not supported on all API versions/keys,
-   * we inject the system instructions as a User/Model pair at the very beginning.
-   */
+  // Inject instructions into history to bypass 'system_instruction' field issues
   const contents = [
     { role: 'user', parts: [{ text: `Instruction: ${SYS_TEXT}` }] },
     { role: 'model', parts: [{ text: "فهمتك تماماً يا مستر بدر. أنا علوق النخل وجاهز لمساعدتك بالعامية المصرية وبكل احترافية! اتفضل اسألني في أي حاجة." }] },
     ...userMessages
   ];
 
-  // Using the stable V1 endpoint which is compatible with all keys
-  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+  // Return to v1beta for better model compatibility with 'gemini-1.5-flash'
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
   try {
     const response = await fetch(url, {
