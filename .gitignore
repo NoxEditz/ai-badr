@@ -1,8 +1,7 @@
 ```
-# Temporary files
+# Temp files
 *.tmp
 *.swp
-*.swo
 
 # Logs
 *.log
@@ -16,37 +15,37 @@
 .vscode/
 .idea/
 
-# Node.js
+# Dependencies
 node_modules/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.py~
 venv/
 .venv/
-.env
-.coverage
-htmlcov/
+__pycache__/
 .mypy_cache/
 .pytest_cache/
-.coverage*
-
-# Build outputs
 dist/
 build/
 target/
-*.out
+.gradle/
+
+# Compiled files
+*.pyc
+*.class
+*.o
 *.exe
 *.dll
 *.so
 *.a
+*.obj
+*.out
 
-# OS
+# System files
 .DS_Store
 Thumbs.db
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
 
 # Compressed files
 *.zip

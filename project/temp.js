@@ -357,9 +357,9 @@ function initOnboarding() {
     $sliderProgress.style.width = `${(moveDistance / maxSlide) * 100}%`;
     
     // Visual feedback: dim text as you slide
-    const sliderText = document.querySelector('.slider-text');
-    if (sliderText) {
-      sliderText.style.opacity = 1 - (moveDistance / maxSlide);
+    const sliderLabel = document.querySelector('.slider-label');
+    if (sliderLabel) {
+      sliderLabel.style.opacity = 1 - (moveDistance / maxSlide);
     }
 
     if (moveDistance >= maxSlide * 0.9) {
@@ -584,7 +584,7 @@ function appendTypingIndicator() {
   return el;
 }
 
-//* ═══════════════════════════
+/* ═══════════════════════════
    SEND MESSAGE
 ═══════════════════════════ */
 async function sendMessage() {
