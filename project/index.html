@@ -129,9 +129,10 @@ a { color: var(--ng); }
 }
 .slider-track {
   height: 56px; background: var(--bg2); border-radius: var(--radius-lg);
-  position: relative; overflow: hidden;
+  position: relative; overflow: visible;
   display: flex; align-items: center; justify-content: center;
   user-select: none; -webkit-user-select: none;
+  z-index: 0;
 }
 .slider-label {
   font-size: 15px; color: var(--txt2); font-weight: 600;
@@ -141,7 +142,8 @@ a { color: var(--ng); }
 .slider-handle-wrap {
   position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
   width: 48px; height: 48px; cursor: grab; touch-action: none;
-  z-index: 5; user-select: none; -webkit-user-select: none;
+  z-index: 10; user-select: none; -webkit-user-select: none;
+  pointer-events: auto;
 }
 .slider-handle {
   width: 100%; height: 100%; border-radius: var(--radius);
@@ -162,6 +164,20 @@ a { color: var(--ng); }
 .slider-arrow-icon {
   position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
   color: var(--txt3); font-size: 18px; animation: bounceRight 1.4s ease-in-out infinite;
+  pointer-events: none; z-index: 1;
+}
+.slider-label {
+  font-size: 15px; color: var(--txt2); font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  animation: shimmerText 1.8s ease-in-out infinite;
+  pointer-events: none; z-index: 1;
+}
+.slider-progress {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: linear-gradient(90deg, rgba(0,255,65,.08), rgba(0,255,65,.15));
+  border-radius: var(--radius-lg); pointer-events: none;
+  transition: width .1s ease;
+  z-index: 2;
 }
 
 /* AI Intro Modal */
