@@ -1,15 +1,19 @@
 
-// --- CHAT API LOGIC INLINED TO AVOID LOCAL CORS ERRORS ---
-const SYSTEM_PROMPT = `أنت "بدر AI" - مساعد ذكاء اصطناعي متطور ومتخصص في المنهج المصري ومساعدة بدر وصحابه . بترد بالعامية المصرية وبطريقة ودودة جداً.`;
+// --- CHAT API LOGIC INLINED ---
+const SYSTEM_PROMPT = `أنت "بدر AI" - مساعد ذكاء اصطناعي متطور متخصص فقط في المنهج المصري ومساعدة الطلاب في المذاكرة. بترد بالعامية المصرية وبأسلوب ودود يشجع الطلبة. ممنوع تتكلم في أي حاجة بره الدراسة والمنهج التعليمي.`;
 
 async function* streamChat({ messages }) {
+  // تذكر: يجب أن يكون الملف في مجلد اسمه api واسمه server.js
   const response = await fetch('/api/server.js', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages })
   });
   
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`مشكلة في الاتصال: ${response.status}`);
+  }
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -18,27 +22,29 @@ async function* streamChat({ messages }) {
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
+    
     buffer += decoder.decode(value, { stream: true });
 
-    const lines = buffer.split('\n');
-    buffer = lines.pop(); // Keep incomplete line in buffer for next iteration
+    let lines = buffer.split('\n');
+    buffer = lines.pop(); 
 
     for (const line of lines) {
       const trimmed = line.trim();
-      if (!trimmed.startsWith('data:')) continue;
-      if (trimmed === 'data: [DONE]') continue;
+      if (!trimmed || !trimmed.startsWith('data:')) continue;
+      
+      const jsonStr = trimmed.replace('data: ', '');
+      if (jsonStr === '[DONE]') return;
 
       try {
-        const data = JSON.parse(trimmed.substring(5));
+        const data = JSON.parse(jsonStr);
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) yield text;
       } catch (e) {
-        // Ignore malformed or empty chunks
+        continue;
       }
     }
   }
 }
-
 const Storage = {
   saveChats: arr => { try { localStorage.setItem(`badr_chats`, JSON.stringify(arr.slice(-50))); } catch {} },
   loadChats: () => { try { return JSON.parse(localStorage.getItem(`badr_chats`) ?? '[]'); } catch { return []; } },
