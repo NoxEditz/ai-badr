@@ -1594,8 +1594,10 @@ function initOnboarding() {
 
   function completeSlide() {
     console.log("✅ Slide completed!");
+    isDragging = false;
     $sliderHandleWrap.style.transition = "transform .4s cubic-bezier(.4,0,.2,1)";
-    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${maxSlide}px)`;
+    // Snap to end with negative value for RTL
+    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${-maxSlide}px)`;
     $sliderProgress.style.width = "100%";
 
     setTimeout(() => {
@@ -1617,15 +1619,22 @@ function initOnboarding() {
   function handleMove(e) {
     if (!isDragging) return;
     e.preventDefault();
-    const x = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
-    // RTL FIX: In Arabic mode, we drag left, so subtract current from start
-    const deltaX = startX - x;
-    let newX = Math.max(0, Math.min(deltaX, maxSlide));
+    const currentX = e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
+    
+    // RTL FIX: Calculate distance (stay positive for math)
+    let moveDistance = Math.min(Math.max(0, startX - currentX), maxSlide);
+    
+    // APPLY AS NEGATIVE - This moves it left in RTL
+    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${-moveDistance}px)`;
+    $sliderProgress.style.width = `${(moveDistance / maxSlide) * 100}%`;
+    
+    // Visual feedback: dim text as you slide
+    const sliderText = document.querySelector('.slider-text');
+    if (sliderText) {
+      sliderText.style.opacity = 1 - (moveDistance / maxSlide);
+    }
 
-    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
-    $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
-
-    if (newX >= maxSlide * 0.9) {
+    if (moveDistance >= maxSlide * 0.9) {
       handleEnd();
       completeSlide();
     }
