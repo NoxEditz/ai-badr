@@ -174,6 +174,86 @@ a { color: var(--ng); }
   opacity: 0; pointer-events: none; transition: opacity .5s ease;
 }
 #ai-intro-modal.visible { opacity: 1; pointer-events: auto; }
+
+/* ───────────────────────────────────────────────
+   LIVE MODE OVERLAY
+─────────────────────────────────────────────── */
+#live-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: radial-gradient(circle at center, #0a1f12 0%, #020c04 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: all .6s cubic-bezier(.4,0,.2,1);
+  backdrop-filter: blur(20px);
+}
+#live-overlay.visible { opacity: 1; pointer-events: auto; }
+
+.live-orb-container {
+  position: relative; width: 220px; height: 220px;
+  display: flex; align-items: center; justify-content: center;
+}
+.live-orb {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--ng);
+  box-shadow: 0 0 80px var(--glow-hi), 0 0 160px var(--glow);
+  position: relative; z-index: 2;
+  transition: all .5s ease;
+}
+.live-orb.thinking {
+  background: var(--nd);
+  animation: orb-spin 2s linear infinite;
+}
+.live-orb.speaking {
+  animation: orb-pulse 1.5s ease-in-out infinite;
+}
+.live-orb.listening {
+  animation: orb-listen 2s ease-in-out infinite;
+}
+
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 80px var(--glow-hi); }
+  50% { transform: scale(1.15); box-shadow: 0 0 120px var(--ng); }
+}
+@keyframes orb-listen {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+@keyframes orb-spin {
+  0% { transform: rotate(0deg) scale(0.9); filter: hue-rotate(0deg); }
+  100% { transform: rotate(360deg) scale(0.9); filter: hue-rotate(90deg); }
+}
+
+.live-rings {
+  position: absolute; inset: -40px; border-radius: 50%;
+  border: 1px solid var(--border-md);
+  animation: rings-pulse 4s linear infinite;
+}
+.live-rings:nth-child(2) { animation-delay: 1.3s; }
+.live-rings:nth-child(3) { animation-delay: 2.6s; }
+
+@keyframes rings-pulse {
+  0% { transform: scale(0.6); opacity: 0; }
+  50% { opacity: 0.3; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.live-status {
+  margin-top: 60px; font-family: var(--font-hd); font-size: 2.2rem;
+  font-weight: 700; color: var(--txt0); text-align: center;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.live-sub {
+  margin-top: 10px; font-size: 1.1rem; color: var(--txt2);
+  max-width: 300px; text-align: center; opacity: 0.8;
+}
+.live-close {
+  position: absolute; top: 40px; right: 40px;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  color: var(--txt0); font-size: 24px; display: flex;
+  align-items: center; justify-content: center; transition: all .3s;
+}
+.live-close:hover { background: var(--danger); border-color: transparent; }
+
 .intro-card {
   width: min(520px, 92vw); max-height: 85vh; overflow-y: auto;
   background: var(--card); border: 1px solid var(--border-md);
@@ -424,6 +504,12 @@ a { color: var(--ng); }
   color: var(--txt2); font-size: 15px; transition: all var(--trans);
 }
 .hdr-btn:hover { background: var(--card-hover); color: var(--ng); }
+.header-btn {
+  display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+  border-radius: var(--radius-sm); color: var(--txt2); font-size: 13px;
+  transition: all var(--trans); border: 1px solid transparent;
+}
+.header-btn:hover { background: var(--card-hover); color: var(--ng); border-color: var(--border); }
 
 /* ═══════════════════════════════════════════════════
    MESSAGES CONTAINER
@@ -984,6 +1070,24 @@ a { color: var(--ng); }
   </div>
 </div>
 
+<!-- Live Mode Overlay -->
+<div id="live-overlay">
+  <button class="live-close" id="live-exit-btn">✕</button>
+  
+  <div class="live-orb-container">
+    <div class="live-rings"></div>
+    <div class="live-rings"></div>
+    <div class="live-rings"></div>
+    <div id="live-orb" class="live-orb"></div>
+  </div>
+
+  <div id="live-status" class="live-status">علوق لايف</div>
+  <div id="live-sub" class="live-sub">اضغط على الدائرة للكلام</div>
+
+  <button id="live-mic-btn" style="margin-top: 40px; padding: 15px 40px; border-radius: 30px; background: var(--ng); color: #000; font-weight: 700; font-size: 1.1rem; box-shadow: var(--shadow-ng);">
+    ابدأ الكلام 🎤
+  </button>
+</div>
 
 <!-- ══════════════════════════════════
      MAIN APP
@@ -1063,7 +1167,11 @@ a { color: var(--ng); }
             <path d="M10 11v6M14 11v6"/>
           </svg>
         </button>
-        <button class="hdr-btn" id="header-new-chat" title="محادثة جديدة">
+        <button class="header-btn" id="header-live-btn" title="علوق لايف">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <span>لايف</span>
+        </button>
+        <button class="header-btn" id="header-new-chat" title="محادثة جديدة">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -1182,6 +1290,25 @@ a { color: var(--ng); }
 
 <!-- Toast -->
 <div id="toast" class="hidden"></div>
+
+<!-- Live Mode Overlay -->
+<div id="live-overlay">
+  <button class="live-close" id="live-exit-btn">✕</button>
+  
+  <div class="live-orb-container">
+    <div class="live-rings"></div>
+    <div class="live-rings"></div>
+    <div class="live-rings"></div>
+    <div id="live-orb" class="live-orb"></div>
+  </div>
+
+  <div id="live-status" class="live-status">علوق لايف</div>
+  <div id="live-sub" class="live-sub">اضغط على الدائرة للكلام</div>
+
+  <button id="live-mic-btn" style="margin-top: 40px; padding: 15px 40px; border-radius: 30px; background: var(--ng); color: #000; font-weight: 700; font-size: 1.1rem; box-shadow: var(--shadow-ng);">
+    ابدأ الكلام 🎤
+  </button>
+</div>
 
 <!-- ═════════════════════════════════════════════════
      APPLICATION SCRIPT
@@ -2138,6 +2265,109 @@ if (startBtn) {
     }
   });
 }
+
+/* ═══════════════════════════
+   LIVE MODE LOGIC (GEMINI LIVE STYLE)
+═══════════════════════════ */
+const $liveOverlay = $('live-overlay');
+const $liveOrb     = $('live-orb');
+const $liveStatus  = $('live-status');
+const $liveSub     = $('live-sub');
+const $liveMicBtn  = $('live-mic-btn');
+const $liveExit    = $('live-exit-btn');
+const $headerLive  = $('header-live-btn');
+
+let liveActive = false;
+
+function speak(text) {
+  return new Promise((resolve) => {
+    if (!window.speechSynthesis) return resolve();
+    window.speechSynthesis.cancel();
+    
+    const ut = new SpeechSynthesisUtterance(text);
+    ut.lang = 'ar-EG';
+    ut.rate = 1.0;
+    
+    const voices = window.speechSynthesis.getVoices();
+    const arVoice = voices.find(v => v.lang.startsWith('ar')) || voices[0];
+    if (arVoice) ut.voice = arVoice;
+
+    ut.onstart = () => {
+      $liveOrb.className = 'live-orb speaking';
+      $liveStatus.textContent = 'علوق بيتكلم...';
+    };
+    ut.onend = () => {
+      $liveOrb.className = 'live-orb listening';
+      $liveStatus.textContent = 'أنا سامعك...';
+      resolve();
+    };
+    ut.onerror = () => resolve();
+    window.speechSynthesis.speak(ut);
+  });
+}
+
+async function startLiveMode() {
+  liveActive = true;
+  $liveOverlay.classList.add('visible');
+  $liveOrb.className = 'live-orb listening';
+  $liveStatus.textContent = 'جاهز للأوامر';
+  await speak("أهلاً بك يا مستر بدر في علوق لايف. أنا سامعك، اتفضل قول اللي عاوزه.");
+}
+
+function exitLiveMode() {
+  liveActive = false;
+  window.speechSynthesis.cancel();
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  $liveOverlay.classList.remove('visible');
+}
+
+if ($headerLive) $headerLive.addEventListener('click', startLiveMode);
+if ($liveExit) $liveExit.addEventListener('click', exitLiveMode);
+
+$liveMicBtn.addEventListener('mousedown', () => {
+  if (!liveActive) return;
+  startVoiceRecording();
+  $liveOrb.className = 'live-orb speaking';
+  $liveStatus.textContent = 'بسجل صوتك...';
+});
+
+$liveMicBtn.addEventListener('mouseup', () => {
+  if (!liveActive) return;
+  stopVoiceRecording();
+  $liveOrb.className = 'live-orb thinking';
+  $liveStatus.textContent = 'بفكر في الرد...';
+});
+
+$liveMicBtn.addEventListener('touchstart', (e) => { e.preventDefault(); $liveMicBtn.dispatchEvent(new Event('mousedown')); });
+$liveMicBtn.addEventListener('touchend', (e) => { e.preventDefault(); $liveMicBtn.dispatchEvent(new Event('mouseup')); });
+
+const originalSendVoiceMessage = sendVoiceMessage;
+sendVoiceMessage = async function(base64, mimeType) {
+  if (!liveActive) return originalSendVoiceMessage(base64, mimeType);
+
+  const chat = activeChat();
+  const apiMessages = chat.messages.map(m => ({
+    role: m.role,
+    content: m.audio ? buildVoiceContent(m.content, m.audio) : m.content
+  }));
+  
+  apiMessages.push({
+    role: 'user',
+    content: buildVoiceContent('استمع ورد بسرعة وبالعامية المصرية.', { data: base64, mimeType })
+  });
+
+  try {
+    const reply = await fetchChat({ messages: apiMessages });
+    chat.messages.push({ role: 'user', content: '🎤 رسالة صوتية (لايف)', time: now() });
+    chat.messages.push({ role: 'assistant', content: reply, time: now() });
+    Storage.saveChats(state.chats);
+    renderMessages();
+    await speak(reply);
+  } catch (err) {
+    $liveStatus.textContent = 'حصلت مشكلة، حاول تاني';
+    $liveOrb.className = 'live-orb listening';
+  }
+};
 
 initOnboarding();
 </script>
