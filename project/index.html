@@ -100,6 +100,164 @@ a { color: var(--ng); }
 }
 
 /* ═══════════════════════════════════════════════════
+   SLIDE TO UNLOCK / FIRST TIME ONBOARDING
+═══════════════════════════════════════════════════ */
+#onboarding-screen {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #031807 0%, #020c04 65%);
+  transition: opacity .6s ease, transform .6s ease;
+}
+#onboarding-screen.hidden {
+  opacity: 0; transform: scale(1.1); pointer-events: none;
+}
+.onboarding-title {
+  font-family: var(--font-hd); font-size: clamp(24px, 5vw, 36px);
+  font-weight: 900; color: var(--ng); letter-spacing: 4px;
+  text-shadow: 0 0 30px rgba(0,255,65,.6); margin-bottom: 12px;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+.onboarding-subtitle {
+  font-size: 15px; color: var(--txt1); margin-bottom: 40px;
+  text-align: center; line-height: 1.6;
+}
+.slider-container {
+  width: min(340px, 90vw); position: relative;
+  background: var(--card); border: 1px solid var(--border-md);
+  border-radius: var(--radius-xl); padding: 8px;
+  box-shadow: var(--shadow-ng), var(--shadow-card);
+}
+.slider-track {
+  height: 56px; background: var(--bg2); border-radius: var(--radius-lg);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.slider-label {
+  font-size: 15px; color: var(--txt2); font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  animation: shimmerText 1.8s ease-in-out infinite;
+}
+.slider-handle-wrap {
+  position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+  width: 48px; height: 48px; cursor: grab; touch-action: none;
+  z-index: 5;
+}
+.slider-handle {
+  width: 100%; height: 100%; border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--nd), var(--ng));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: #001a00; font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0,255,65,.4), inset 0 0 15px rgba(255,255,255,.2);
+  transition: transform .15s ease; user-select: none;
+}
+.slider-handle:active { cursor: grabbing; transform: scale(.95); }
+.slider-progress {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: linear-gradient(90deg, rgba(0,255,65,.08), rgba(0,255,65,.15));
+  border-radius: var(--radius-lg); pointer-events: none;
+  transition: width .1s ease;
+}
+.slider-arrow-icon {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--txt3); font-size: 18px; animation: bounceRight 1.4s ease-in-out infinite;
+}
+
+/* AI Intro Modal */
+#ai-intro-modal {
+  position: fixed; inset: 0; z-index: 150;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(2,12,4,.85); backdrop-filter: blur(15px);
+  opacity: 0; pointer-events: none; transition: opacity .5s ease;
+}
+#ai-intro-modal.visible { opacity: 1; pointer-events: auto; }
+.intro-card {
+  width: min(520px, 92vw); max-height: 85vh; overflow-y: auto;
+  background: var(--card); border: 1px solid var(--border-md);
+  border-radius: var(--radius-xl); padding: 0;
+  box-shadow: 0 0 50px rgba(0,255,65,.25), var(--shadow-card);
+  animation: introSlideUp .6s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+}
+.intro-header {
+  padding: 28px 24px 16px; text-align: center;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(0,255,65,.05), transparent);
+}
+.intro-robot-avatar {
+  width: 90px; height: 90px; margin: 0 auto 16px;
+  position: relative; animation: floatY 3s ease-in-out infinite;
+}
+.intro-robot-avatar svg {
+  width: 100%; height: 100%; filter: drop-shadow(0 0 25px var(--ng));
+}
+.intro-name {
+  font-family: var(--font-hd); font-size: 26px; font-weight: 900;
+  color: var(--ng); letter-spacing: 3px; text-shadow: 0 0 20px rgba(0,255,65,.5);
+  margin-bottom: 6px;
+}
+.intro-greeting {
+  font-size: 14px; color: var(--txt1); line-height: 1.6;
+}
+.intro-body { padding: 24px; }
+.intro-section { margin-bottom: 22px; }
+.intro-section-title {
+  font-size: 13px; color: var(--na); font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.intro-feature-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+.intro-feature {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: all var(--trans);
+}
+.intro-feature:hover {
+  border-color: var(--border-md); background: var(--bg3);
+  transform: translateY(-2px);
+}
+.intro-feature-icon { font-size: 20px; }
+.intro-feature-text { font-size: 12px; color: var(--txt1); line-height: 1.5; }
+.intro-tips {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px;
+}
+.intro-tip-item {
+  display: flex; gap: 10px; margin-bottom: 10px; font-size: 13px; color: var(--txt1);
+}
+.intro-tip-item:last-child { margin-bottom: 0; }
+.intro-tip-icon { flex-shrink: 0; color: var(--ng); }
+.intro-btn {
+  width: 100%; padding: 14px; margin-top: 8px;
+  background: linear-gradient(135deg, var(--nd), var(--ng));
+  color: #001a00; font-size: 16px; font-weight: 700;
+  border-radius: var(--radius); letter-spacing: .5px;
+  transition: all var(--trans); box-shadow: 0 4px 20px rgba(0,255,65,.3);
+}
+.intro-btn:hover {
+  transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,255,65,.45);
+}
+
+@keyframes glowPulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(0,255,65,.4); }
+  50% { text-shadow: 0 0 35px rgba(0,255,65,.7); }
+}
+@keyframes shimmerText {
+  0%, 100% { opacity: .6; }
+  50% { opacity: 1; }
+}
+@keyframes bounceRight {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-50%) translateX(4px); }
+}
+@keyframes introSlideUp {
+  from { opacity: 0; transform: translateY(40px) scale(.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ═══════════════════════════════════════════════════
    SETUP / ONBOARDING SCREEN
 ═══════════════════════════════════════════════════ */
 #setup-screen {
@@ -828,6 +986,102 @@ a { color: var(--ng); }
 <div class="vignette"></div>
 
 <!-- ══════════════════════════════════
+     ONBOARDING / SLIDE TO UNLOCK SCREEN
+══════════════════════════════════ -->
+<div id="onboarding-screen" class="hidden">
+  <h1 class="onboarding-title">BADR AI</h1>
+  <p class="onboarding-subtitle">مساعدك الذكي للثانوية العامة والإنتاج الموسيقي 🎓🎵</p>
+  
+  <div class="slider-container">
+    <div class="slider-track">
+      <span class="slider-label">اسحب لفتح →</span>
+      <div class="slider-progress" id="slider-progress"></div>
+      <div class="slider-arrow-icon">➜</div>
+      <div class="slider-handle-wrap" id="slider-handle-wrap">
+        <div class="slider-handle" id="slider-handle">⟡</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     AI INTRO MODAL
+══════════════════════════════════ -->
+<div id="ai-intro-modal">
+  <div class="intro-card">
+    <div class="intro-header">
+      <div class="intro-robot-avatar">
+        <svg viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="45" cy="45" r="42" fill="#001a05" stroke="#00ff41" stroke-width="2"/>
+          <circle cx="45" cy="45" r="35" stroke="#00ff41" stroke-width=".8" stroke-dasharray="5 4" opacity=".5"/>
+          <ellipse cx="45" cy="38" rx="18" ry="14" fill="#003310" stroke="#00ff41" stroke-width="1.5"/>
+          <circle cx="38" cy="35" r="4" fill="#00ff41"/>
+          <circle cx="52" cy="35" r="4" fill="#00ff41"/>
+          <path d="M35 48 Q45 56 55 48" stroke="#00ff41" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <rect x="20" y="58" width="50" height="18" rx="6" fill="#002208" stroke="#00ff41" stroke-width="1.2"/>
+          <line x1="28" y1="64" x2="28" y2="70" stroke="#00ff41" stroke-width="1.5"/>
+          <line x1="36" y1="64" x2="36" y2="70" stroke="#00ff41" stroke-width="1.5"/>
+          <line x1="44" y1="64" x2="44" y2="70" stroke="#00ff41" stroke-width="1.5"/>
+          <line x1="52" y1="64" x2="52" y2="70" stroke="#00ff41" stroke-width="1.5"/>
+          <line x1="60" y1="64" x2="60" y2="70" stroke="#00ff41" stroke-width="1.5"/>
+          <polygon points="45,8 52,18 45,22 38,18" fill="#00ff41" opacity=".8"/>
+        </svg>
+      </div>
+      <h2 class="intro-name">أنا بدر AI</h2>
+      <p class="intro-greeting">مساعدك الشخصي للمذاكرة والإبداع 🚀</p>
+    </div>
+    
+    <div class="intro-body">
+      <div class="intro-section">
+        <div class="intro-section-title">
+          <span>⚡</span> أقدر أساعدك في إيه؟
+        </div>
+        <div class="intro-feature-grid">
+          <div class="intro-feature">
+            <span class="intro-feature-icon">📚</span>
+            <span class="intro-feature-text">شرح دروس الثانوية العامة بأسلوب بسيط</span>
+          </div>
+          <div class="intro-feature">
+            <span class="intro-feature-icon">🎯</span>
+            <span class="intro-feature-text">حل أسئلة وتمارين من المنهج المصري</span>
+          </div>
+          <div class="intro-feature">
+            <span class="intro-feature-icon">🎵</span>
+            <span class="intro-feature-text">نصائح للإنتاج الموسيقي والـ Mixing</span>
+          </div>
+          <div class="intro-feature">
+            <span class="intro-feature-icon">💡</span>
+            <span class="intro-feature-text">إجابة على أي سؤال في أي وقت</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="intro-section">
+        <div class="intro-section-title">
+          <span>📍</span> كل حاجة فين؟
+        </div>
+        <div class="intro-tips">
+          <div class="intro-tip-item">
+            <span class="intro-tip-icon">←</span>
+            <span><strong>الشريط الجانبي:</strong> فيه تاريخ المحادثات وزر محادثة جديدة</span>
+          </div>
+          <div class="intro-tip-item">
+            <span class="intro-tip-icon">↓</span>
+            <span><strong>أسفل الشاشة:</strong> اكتب سؤالك هنا واضغط إرسال</span>
+          </div>
+          <div class="intro-tip-item">
+            <span class="intro-tip-icon">⚙️</span>
+            <span><strong>الإعدادات:</strong> في أسفل الشريط الجانبي</span>
+          </div>
+        </div>
+      </div>
+      
+      <button class="intro-btn" id="intro-start-btn">يلا نبدأ! 🎉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
      SETUP SCREEN
 ══════════════════════════════════ -->
 <div id="setup-screen" class="hidden">
@@ -1158,28 +1412,34 @@ const activeChat = () => state.chats.find(c => c.id === state.activeChatId);
    DOM REFS
 ═══════════════════════════ */
 const $  = id => document.getElementById(id);
-const $setup        = $('setup-screen');
-const $app          = $('app');
-const $setupInput   = $('api-key-input');
-const $setupBtn     = $('setup-submit-btn');
-const $setupError   = $('setup-error');
-const $msgList      = $('messages-list');
-const $msgContainer = $('messages-container');
-const $welcome      = $('welcome-screen');
-const $typingInd    = null;  // created dynamically
-const $input        = $('message-input');
-const $sendBtn      = $('send-btn');
-const $fileBtn      = $('file-btn');
-const $fileInput    = $('file-input');
-const $voiceBtn     = $('voice-btn');
-const $previewStrip = $('file-preview-strip');
-const $chatHistory  = $('chat-history');
-const $emptyMsg     = $('sb-empty-msg');
-const $voiceOverlay = $('voice-overlay');
-const $voTimer      = $('vo-timer');
-const $voTranscript = $('vo-transcript');
-const $settingsModal= $('settings-modal');
-const $settingsKey  = $('settings-key-input');
+const $onboarding     = $('onboarding-screen');
+const $aiIntroModal   = $('ai-intro-modal');
+const $sliderHandleWrap = $('slider-handle-wrap');
+const $sliderHandle   = $('slider-handle');
+const $sliderProgress = $('slider-progress');
+const $introStartBtn  = $('intro-start-btn');
+const $setup          = $('setup-screen');
+const $app            = $('app');
+const $setupInput     = $('api-key-input');
+const $setupBtn       = $('setup-submit-btn');
+const $setupError     = $('setup-error');
+const $msgList        = $('messages-list');
+const $msgContainer   = $('messages-container');
+const $welcome        = $('welcome-screen');
+const $typingInd      = null;  // created dynamically
+const $input          = $('message-input');
+const $sendBtn        = $('send-btn');
+const $fileBtn        = $('file-btn');
+const $fileInput      = $('file-input');
+const $voiceBtn       = $('voice-btn');
+const $previewStrip   = $('file-preview-strip');
+const $chatHistory    = $('chat-history');
+const $emptyMsg       = $('sb-empty-msg');
+const $voiceOverlay   = $('voice-overlay');
+const $voTimer        = $('vo-timer');
+const $voTranscript   = $('vo-transcript');
+const $settingsModal  = $('settings-modal');
+const $settingsKey    = $('settings-key-input');
 
 /* ═══════════════════════════
    CANVAS BACKGROUND
@@ -1307,12 +1567,112 @@ function updateSendBtn() {
 }
 
 /* ═══════════════════════════
+   ONBOARDING / SLIDE TO UNLOCK
+═══════════════════════════ */
+function initOnboarding() {
+  const hasSeenIntro = localStorage.getItem('badr_intro_seen') === 'true';
+  
+  if (hasSeenIntro) {
+    // User has seen intro before, launch app directly
+    $onboarding.classList.add('hidden');
+    launchApp();
+    return;
+  }
+  
+  // First time user - show slide to unlock
+  $onboarding.classList.remove('hidden');
+  $aiIntroModal.classList.remove('visible');
+  
+  let isDragging = false;
+  let startX = 0;
+  let currentX = 0;
+  const maxSlide = 240; // Max distance slider can move
+  
+  function handleStart(clientX) {
+    isDragging = true;
+    startX = clientX;
+    $sliderHandle.style.transition = 'none';
+  }
+  
+  function handleMove(clientX) {
+    if (!isDragging) return;
+    currentX = clientX - startX;
+    if (currentX < 0) currentX = 0;
+    if (currentX > maxSlide) currentX = maxSlide;
+    
+    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${currentX}px)`;
+    $sliderProgress.style.width = `${(currentX / maxSlide) * 100}%`;
+  }
+  
+  function handleEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    $sliderHandle.style.transition = 'transform .15s ease';
+    
+    if (currentX >= maxSlide - 20) {
+      // Success - complete the slide
+      completeSlide();
+    } else {
+      // Reset - not far enough
+      $sliderHandleWrap.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
+      $sliderHandleWrap.style.transform = 'translateY(-50%) translateX(0)';
+      $sliderProgress.style.transition = 'width .3s ease';
+      $sliderProgress.style.width = '0%';
+    }
+    currentX = 0;
+    startX = 0;
+  }
+  
+  function completeSlide() {
+    $sliderHandleWrap.style.transition = 'transform .4s cubic-bezier(.4,0,.2,1)';
+    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${maxSlide}px)`;
+    $sliderProgress.style.width = '100%';
+    
+    // Fade out onboarding screen with blur effect
+    setTimeout(() => {
+      $onboarding.classList.add('hidden');
+      
+      // Show AI intro modal with blur backdrop
+      setTimeout(() => {
+        $aiIntroModal.classList.add('visible');
+      }, 100);
+    }, 300);
+  }
+  
+  // Mouse events
+  $sliderHandleWrap.addEventListener('mousedown', e => {
+    e.preventDefault();
+    handleStart(e.clientX);
+  });
+  document.addEventListener('mousemove', e => handleMove(e.clientX));
+  document.addEventListener('mouseup', () => handleEnd());
+  
+  // Touch events
+  $sliderHandleWrap.addEventListener('touchstart', e => {
+    handleStart(e.touches[0].clientX);
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    handleMove(e.touches[0].clientX);
+  }, { passive: true });
+  document.addEventListener('touchend', () => handleEnd());
+  
+  // Intro start button
+  $introStartBtn.addEventListener('click', () => {
+    localStorage.setItem('badr_intro_seen', 'true');
+    $aiIntroModal.classList.remove('visible');
+    setTimeout(() => {
+      launchApp();
+    }, 300);
+  });
+}
+
+/* ═══════════════════════════
    SETUP / AUTH
 ═══════════════════════════ */
 function initSetup() {
   // API key is now handled server-side via Vercel environment variable
-  // No need to show setup screen - launch app directly
-  launchApp();
+  // Initialize onboarding first (slide to unlock + intro)
+  initOnboarding();
 }
 
 $setupInput.addEventListener('input', () => {
