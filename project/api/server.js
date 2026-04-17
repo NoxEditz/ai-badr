@@ -1,4 +1,4 @@
-// API Logic with Robust Fallback: Gemini -> Groq
+// Robust API Handler with Model Discovery and Fallback
 const rateLimitMap = new Map();
 const RATE_LIMIT = 20; 
 const RATE_WINDOW = 60000;
@@ -28,47 +28,71 @@ export default async function handler(req, res) {
   const GEMINI_KEY = process.env.GEMINI_API_KEY;
   const GROQ_KEY   = process.env.GROQ_API_KEY;
 
-  if (!GEMINI_KEY && !GROQ_KEY) return res.status(500).json({ error: "No API keys found in Vercel." });
+  if (!GEMINI_KEY && !GROQ_KEY) return res.status(500).json({ error: "No API keys found." });
 
   // --- ATTEMPT 1: GEMINI ---
   if (GEMINI_KEY) {
     try {
-      const response = await fetchGemini(messages, GEMINI_KEY);
+      // Primary model string - common in 2026
+      const modelName = "gemini-1.5-flash"; 
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_KEY}`;
+      
+      const contents = formatGeminiMessages(messages);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents,
+          generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+        })
+      });
+
       if (response.ok) {
         const data = await response.json();
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (reply) return res.status(200).json({ reply });
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        console.error(`Gemini Failed | Status: ${response.status} | Model: ${modelName}`, JSON.stringify(errData));
+        
+        // DISCOVERY: List models to help debug what's available
+        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`;
+        const listRes = await fetch(listUrl).then(r => r.json()).catch(() => ({}));
+        console.log("AVAILABLE MODELS ON YOUR ACCOUNT:", JSON.stringify(listRes.models?.map(m => m.name)));
       }
-      
-      // Detailed logging for debugging
-      const errorData = await response.json().catch(() => ({}));
-      console.error(`Gemini Failed | Status: ${response.status} | Error:`, JSON.stringify(errorData));
-      
-      console.log(`Gemini Status ${response.status} - Falling back to Groq.`);
     } catch (err) {
-      console.error("Gemini Critical Failure (Network/Fetch):", err);
+      console.error("Gemini Error:", err);
     }
   }
 
   // --- ATTEMPT 2: GROQ (Fallback) ---
   if (GROQ_KEY) {
     try {
-      const response = await fetchGroq(messages, GROQ_KEY);
+      const groqMessages = formatGroqMessages(messages);
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: groqMessages,
+          max_tokens: 1000,
+          temperature: 0.7
+        })
+      });
       const data = await response.json();
       if (response.ok) {
         const reply = data.choices?.[0]?.message?.content;
         return res.status(200).json({ reply: reply + " (Groq Fallback Mode)" });
       }
-      return res.status(response.status).json({ error: data.error?.message || "Groq Error" });
     } catch (err) {
-      return res.status(500).json({ error: "Both Gemini and Groq failed." });
+      console.error("Groq Fallback Error:", err);
     }
   }
 
-  return res.status(500).json({ error: "كل السيرفرات مشغولة حالياً، حاول تاني كمان شوية." });
+  return res.status(500).json({ error: "لا يمكن التواصل مع الذكاء الاصطناعي حالياً، حاول مرة أخرى." });
 }
 
-async function fetchGemini(messages, key) {
+function formatGeminiMessages(messages) {
   const userMessages = messages.filter(m => m.role !== 'system').slice(-10).map(m => {
     let parts = [];
     if (Array.isArray(m.content)) {
@@ -83,26 +107,14 @@ async function fetchGemini(messages, key) {
     return { role: m.role === 'assistant' ? 'model' : 'user', parts };
   });
 
-  const contents = [
-    { role: 'user', parts: [{ text: "Instruction: أنت علوق النخل. رد بالعامية المصرية بأسلوب ودود وتعليمي." }] },
+  return [
+    { role: 'user', parts: [{ text: "Instruction: أنت علوق النخل. مساعد تعليمي مصري. رد بالعامية المصرية دايماً." }] },
     { role: 'model', parts: [{ text: "فهمتك! أنا جاهز للمساعدة." }] },
     ...userMessages
   ];
-
-  // Using Gemini 3.1 Flash-Lite (Current 2026 High-Efficiency Model)
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${key}`;
-  
-  return fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents,
-      generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
-    })
-  });
 }
 
-async function fetchGroq(messages, key) {
+function formatGroqMessages(messages) {
   const groqMessages = messages.map(m => {
     let content = "";
     if (Array.isArray(m.content)) {
@@ -119,15 +131,5 @@ async function fetchGroq(messages, key) {
   if (groqMessages[0].role !== 'system') {
     groqMessages.unshift({ role: 'system', content: "أنت علوق النخل. مساعد تعليمي مصري. رد بالعامية المصرية دايماً." });
   }
-
-  return fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: groqMessages,
-      max_tokens: 1000,
-      temperature: 0.7
-    })
-  });
+  return groqMessages;
 }
