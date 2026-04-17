@@ -886,7 +886,7 @@ a { color: var(--ng); }
 <!-- ══════════════════════════════════
      MAIN APP
 ══════════════════════════════════ -->
-<div id="app" class="hidden">
+<div id="app">
 
   <!-- Mobile sidebar backdrop -->
   <div id="sidebar-backdrop"></div>
@@ -1310,14 +1310,9 @@ function updateSendBtn() {
    SETUP / AUTH
 ═══════════════════════════ */
 function initSetup() {
-  const saved = Storage.loadKey();
-  if (saved && validateApiKey(saved)) {
-    state.apiKey = saved;
-    launchApp();
-    return;
-  }
-  $setup.classList.remove('hidden');
-  $app.classList.add('hidden');
+  // API key is now handled server-side via Vercel environment variable
+  // No need to show setup screen - launch app directly
+  launchApp();
 }
 
 $setupInput.addEventListener('input', () => {
@@ -1592,7 +1587,7 @@ async function sendMessage() {
   try {
     state.abortController = new AbortController();
 
-    for await (const chunk of streamChat({ messages: apiMessages, apiKey: state.apiKey })) {
+    for await (const chunk of streamChat({ messages: apiMessages })) {
       fullText += chunk;
 
       if (!aiMsgEl) {
