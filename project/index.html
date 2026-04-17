@@ -1606,85 +1606,97 @@ function initOnboarding() {
   }
 
   // Mouse events
-  $sliderHandleWrap.addEventListener('mousedown', e => {
+  $sliderHandleWrap.addEventListener('mousedown', function(e) {
     e.preventDefault();
     e.stopPropagation();
     isDragging = true;
     startX = e.clientX;
     $sliderHandle.style.transition = 'none';
     $sliderHandleWrap.style.transition = 'none';
-  });
+    
+    function onMouseMove(moveEvent) {
+      if (!isDragging) return;
+      moveEvent.preventDefault();
+      const deltaX = moveEvent.clientX - startX;
+      let newX = deltaX;
+      if (newX < 0) newX = 0;
+      if (newX > maxSlide) newX = maxSlide;
 
-  document.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const deltaX = e.clientX - startX;
-    let newX = deltaX;
-    if (newX < 0) newX = 0;
-    if (newX > maxSlide) newX = maxSlide;
-
-    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
-    $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    $sliderHandle.style.transition = 'transform .15s ease';
-
-    const currentTransform = $sliderHandleWrap.style.transform;
-    const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
-    const currentX = match ? parseFloat(match[1]) : 0;
-
-    if (currentX >= maxSlide - 20) {
-      completeSlide();
-    } else {
-      $sliderHandleWrap.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
-      $sliderHandleWrap.style.transform = 'translateY(-50%) translateX(0)';
-      $sliderProgress.style.transition = 'width .3s ease';
-      $sliderProgress.style.width = '0%';
+      $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
+      $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
     }
+    
+    function onMouseUp() {
+      if (!isDragging) return;
+      isDragging = false;
+      $sliderHandle.style.transition = 'transform .15s ease';
+
+      const currentTransform = $sliderHandleWrap.style.transform;
+      const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
+      const currentX = match ? parseFloat(match[1]) : 0;
+
+      if (currentX >= maxSlide - 20) {
+        completeSlide();
+      } else {
+        $sliderHandleWrap.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
+        $sliderHandleWrap.style.transform = 'translateY(-50%) translateX(0)';
+        $sliderProgress.style.transition = 'width .3s ease';
+        $sliderProgress.style.width = '0%';
+      }
+      
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
   });
 
   // Touch events
-  $sliderHandleWrap.addEventListener('touchstart', e => {
+  $sliderHandleWrap.addEventListener('touchstart', function(e) {
     e.preventDefault();
     isDragging = true;
     startX = e.touches[0].clientX;
     $sliderHandle.style.transition = 'none';
     $sliderHandleWrap.style.transition = 'none';
-  }, { passive: false });
+    
+    function onTouchMove(moveEvent) {
+      if (!isDragging) return;
+      moveEvent.preventDefault();
+      const deltaX = moveEvent.touches[0].clientX - startX;
+      let newX = deltaX;
+      if (newX < 0) newX = 0;
+      if (newX > maxSlide) newX = maxSlide;
 
-  document.addEventListener('touchmove', e => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const deltaX = e.touches[0].clientX - startX;
-    let newX = deltaX;
-    if (newX < 0) newX = 0;
-    if (newX > maxSlide) newX = maxSlide;
-
-    $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
-    $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
-  }, { passive: false });
-
-  document.addEventListener('touchend', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    $sliderHandle.style.transition = 'transform .15s ease';
-
-    const currentTransform = $sliderHandleWrap.style.transform;
-    const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
-    const currentX = match ? parseFloat(match[1]) : 0;
-
-    if (currentX >= maxSlide - 20) {
-      completeSlide();
-    } else {
-      $sliderHandleWrap.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
-      $sliderHandleWrap.style.transform = 'translateY(-50%) translateX(0)';
-      $sliderProgress.style.transition = 'width .3s ease';
-      $sliderProgress.style.width = '0%';
+      $sliderHandleWrap.style.transform = `translateY(-50%) translateX(${newX}px)`;
+      $sliderProgress.style.width = `${(newX / maxSlide) * 100}%`;
     }
-  });
+    
+    function onTouchEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      $sliderHandle.style.transition = 'transform .15s ease';
+
+      const currentTransform = $sliderHandleWrap.style.transform;
+      const match = currentTransform.match(/translateX\(([\d.]+)px\)/);
+      const currentX = match ? parseFloat(match[1]) : 0;
+
+      if (currentX >= maxSlide - 20) {
+        completeSlide();
+      } else {
+        $sliderHandleWrap.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
+        $sliderHandleWrap.style.transform = 'translateY(-50%) translateX(0)';
+        $sliderProgress.style.transition = 'width .3s ease';
+        $sliderProgress.style.width = '0%';
+      }
+      
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+    }
+    
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+  }, { passive: false });
   // Intro start button
   $introStartBtn.addEventListener('click', () => {
     localStorage.setItem('badr_intro_seen', 'true');
