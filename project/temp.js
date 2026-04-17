@@ -1,6 +1,6 @@
 
 // --- CHAT API LOGIC INLINED TO AVOID LOCAL CORS ERRORS ---
-const SYSTEM_PROMPT = `أنت "بدر AI" - مساعد ذكاء اصطناعي متطور ومتخصص في المنهج المصري ومساعدة بدر وصحابه في الإنتاج الموسيقي (Mixing/Mastering/Lyrics). بترد بالعامية المصرية وبطريقة ودودة جداً.`;
+const SYSTEM_PROMPT = `أنت "بدر AI" - مساعد ذكاء اصطناعي متطور ومتخصص في المنهج المصري ومساعدة بدر وصحابه . بترد بالعامية المصرية وبطريقة ودودة جداً.`;
 
 async function* streamChat({ messages }) {
   const response = await fetch('/api/server', {
@@ -557,7 +557,7 @@ function appendTypingIndicator() {
   return el;
 }
 
-/* ═══════════════════════════
+//* ═══════════════════════════
    SEND MESSAGE
 ═══════════════════════════ */
 async function sendMessage() {
@@ -588,21 +588,29 @@ async function sendMessage() {
   appendMessage(userMsg);
   updateChatTitle(chat, text || '📎 صورة');
 
-  // API messages format
-  const apiMessages = chat.messages.slice(0, -1).map(m => ({
-    role:    m.role,
-    content: m.images?.length
-      ? buildMessageContent(m.content, m.images)
-      : m.content,
-  }));
+  // --- API messages format (Updated to include SYSTEM_PROMPT) ---
+  const apiMessages = [
+    { role: 'system', content: SYSTEM_PROMPT }
+  ];
 
-  // add current user message
+  // Add previous messages from the chat history
+  chat.messages.slice(0, -1).forEach(m => {
+    apiMessages.push({
+      role:    m.role,
+      content: m.images?.length
+        ? buildMessageContent(m.content, m.images)
+        : m.content,
+    });
+  });
+
+  // Add the current message the user just typed
   apiMessages.push({
     role:    'user',
     content: images.length
       ? buildMessageContent(text, images)
       : text,
   });
+  // --------------------------------------------------------------
 
   // Show typing
   state.streaming = true;
@@ -684,7 +692,6 @@ async function sendMessage() {
     renderSidebar();
   }
 }
-
 /* ═══════════════════════════
    FILE UPLOAD
 ═══════════════════════════ */
