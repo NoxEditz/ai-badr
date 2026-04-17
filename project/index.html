@@ -997,7 +997,7 @@ a { color: var(--ng); }
   <p class="onboarding-subtitle">مساعدك الذكي للثانوية العامة 🎓</p>
   
   <div class="slider-container">
-    <div class="slider-track">
+    <div class="slider-track" id="slider-track">
       <span class="slider-label">اسحب لفتح →</span>
       <div class="slider-progress" id="slider-progress"></div>
       <div class="slider-arrow-icon">➜</div>
@@ -2243,6 +2243,23 @@ function escapeHtml(str) {
 /* ═══════════════════════════
    BOOT
 ═══════════════════════════ */
+
+// Add event listener for the "Start Chat" button in the intro modal
+$introStartBtn.addEventListener('click', () => {
+  // 1. Mark intro as seen so they don't have to slide again on reload
+  localStorage.setItem('badr_intro_seen', 'true');
+  
+  // 2. Hide the intro modal and the onboarding background
+  $aiIntroModal.classList.remove('visible');
+  $onboarding.classList.add('hidden');
+  
+  // 3. Show the main chat interface directly (skip API key setup since it's in env)
+  $app.classList.remove('hidden');
+  $welcome.classList.remove('hidden');
+  renderSidebar();
+  renderMessages();
+});
+
 initOnboarding();
 </script>
 
