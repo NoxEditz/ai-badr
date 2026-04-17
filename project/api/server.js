@@ -14,11 +14,6 @@ export default async function handler(req, res) {
   }
 
   const { messages } = req.body;
-
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: "Invalid chat history received." });
-  }
-
   const API_KEY = process.env.GOOGLE_API_KEY;
 
   if (!API_KEY) {
@@ -43,7 +38,8 @@ export default async function handler(req, res) {
       };
     });
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+  // Changed v1beta to v1 for stability and universal support
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
   try {
     const response = await fetch(url, {
@@ -62,16 +58,15 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-       console.error("API Error Details:", data);
+       console.error("API Error:", data);
        return res.status(500).json({ error: data.error?.message || "Google API Error" });
     }
 
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "عذراً، لم أستطع فهم ذلك.";
-    
     res.status(200).json({ reply });
 
   } catch (error) {
     console.error("Server Error:", error);
-    res.status(500).json({ error: "حدث خطأ في الخادم الداخلي." });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 }
