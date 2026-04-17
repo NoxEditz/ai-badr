@@ -3,7 +3,7 @@
 const SYSTEM_PROMPT = `أنت "بدر AI" - مساعد ذكاء اصطناعي متطور ومتخصص في المنهج المصري ومساعدة بدر وصحابه . بترد بالعامية المصرية وبطريقة ودودة جداً.`;
 
 async function* streamChat({ messages }) {
-  const response = await fetch('/api/server', {
+  const response = await fetch('/api/server.js', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages })
