@@ -1191,13 +1191,36 @@ a { color: var(--ng); }
 const SYSTEM_PROMPT = `أنت "بدر AI" - مساعد ذكاء اصطناعي متطور، متصمم بواسطة بدر عشان يشرح الأكواد البرمجية ويساعد في حل المشاكل التقنية بأسلوب مبسط وواضح جداً. بترد بالعامية المصرية وبطريقة ودودة جداً.`;
 
 async function* streamChat({ messages }) {
-  const response = await fetch('/api/server', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages })
-  });
+  let response;
   
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  try {
+    // 1. First attempt: trying the standard Vercel route
+    response = await fetch('/api/server', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages })
+    });
+
+    // 2. Fallback: If 404, try adding the .js extension explicitly
+    if (response.status === 404) {
+      response = await fetch('/api/server.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages })
+      });
+    }
+  } catch (e) {
+    throw new Error("حدث خطأ في الشبكة، تأكد من اتصالك.");
+  }
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    // If it's still 404 after both tries, the folder structure is definitely wrong
+    if (response.status === 404) {
+      throw new Error("بدر AI مش لاقي ملف البرمجة. تأكد أن ملف server.js داخل مجلد اسمه api");
+    }
+    throw new Error(`مشكلة في السيرفر: ${response.status}`);
+  }
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -1206,27 +1229,31 @@ async function* streamChat({ messages }) {
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
+    
     buffer += decoder.decode(value, { stream: true });
-
-    const lines = buffer.split('\n');
-    buffer = lines.pop(); // Keep incomplete line in buffer for next iteration
+    
+    let lines = buffer.split('\n');
+    buffer = lines.pop() || ''; 
 
     for (const line of lines) {
       const trimmed = line.trim();
-      if (!trimmed.startsWith('data:')) continue;
-      if (trimmed === 'data: [DONE]') continue;
+      if (!trimmed || !trimmed.startsWith('data:')) continue;
+      
+      const jsonStr = trimmed.replace(/^data:\s*/, '').trim();
+      if (jsonStr === '[DONE]') return;
 
       try {
-        const data = JSON.parse(trimmed.substring(5));
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const data = JSON.parse(jsonStr);
+        // Supports both Gemini and standard OpenAI formats
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text 
+                  || data.choices?.[0]?.delta?.content;
         if (text) yield text;
       } catch (e) {
-        // Ignore malformed or empty chunks
+        continue;
       }
     }
   }
 }
-
 const Storage = {
   saveChats: arr => { try { localStorage.setItem(`badr_chats`, JSON.stringify(arr.slice(-50))); } catch {} },
   loadChats: () => { try { return JSON.parse(localStorage.getItem(`badr_chats`) ?? '[]'); } catch { return []; } },
