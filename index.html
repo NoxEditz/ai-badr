@@ -4464,6 +4464,13 @@
         updateChatTitle(chat);
         renderMessages();
 
+        // ── Gamification: award points per question ──
+        if (window.addPoints) {
+          userProg.stats.questionsAsked = (userProg.stats.questionsAsked || 0) + 1;
+          localStorage.setItem('olouq_gamification', JSON.stringify(userProg));
+          window.addPoints(10, 'سؤال جديد');
+        }
+
         // Clear pending image after success
         if (state.pendingImage) {
           removePendingImage();
@@ -6067,8 +6074,15 @@
       const $body = document.getElementById('challenge-body');
       if (idx === correct) {
         $body.innerHTML = '<div style="font-size:50px;">🏆</div><h2 style="color:var(--ng);">عبقري!</h2><p>لقد هزمت الـ Boss بنجاح.</p>';
-        state.progress.sessions += 2; // Extra XP
+        state.progress.sessions += 2;
         Storage.saveProgress(state.progress);
+        // Gamification
+        if (window.addPoints) {
+          userProg.stats.testsCompleted = (userProg.stats.testsCompleted || 0) + 1;
+          localStorage.setItem('olouq_gamification', JSON.stringify(userProg));
+          window.addPoints(50, 'هزمت سؤال Boss!');
+          unlockAchievement('boss_slayer');
+        }
       } else {
         $body.innerHTML = '<div style="font-size:50px;">💀</div><h2 style="color:var(--danger);">للأسف!</h2><p>السؤال كان أقوى منك المرة دي.</p><button onclick="location.reload()" class="header-btn">حاول بكرة</button>';
       }
@@ -6107,24 +6121,161 @@
     });
 
     // ═══════════════════════════════════════════════════
-    // GAMIFICATION (POINTS & ACHIEVEMENTS)
+    // GAMIFICATION — Full System
     // ═══════════════════════════════════════════════════
     const defaultProgress = {
       points: 0, level: 1, streak: 0, lastVisit: null, achievements: [],
-      stats: { questionsAsked: 0, testsCompleted: 0 }
+      stats: { questionsAsked: 0, testsCompleted: 0, studyHours: 0 }
     };
     const userProg = JSON.parse(localStorage.getItem('olouq_gamification')) || defaultProgress;
-    
+
+    // ── Streak: update on each session ──
+    const todayStr = new Date().toDateString();
+    if (userProg.lastVisit !== todayStr) {
+      const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+      if (userProg.lastVisit === yesterday.toDateString()) {
+        userProg.streak++;
+      } else if (userProg.lastVisit !== todayStr) {
+        userProg.streak = 1;
+      }
+      userProg.lastVisit = todayStr;
+      localStorage.setItem('olouq_gamification', JSON.stringify(userProg));
+    }
+
+    // ── Level-up animation ──
+    function showLevelUpAnimation(level) {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0);
+        background: linear-gradient(135deg, var(--ng), #00c853);
+        color: var(--bg0); border-radius: 20px; padding: 30px 50px;
+        text-align:center; z-index:9999; font-family:var(--font-ui);
+        box-shadow: 0 0 60px rgba(0,230,118,0.5);
+        transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+      `;
+      el.innerHTML = `<div style="font-size:50px">🎉</div><div style="font-size:28px;font-weight:800">مستوى ${level}!</div><div style="font-size:16px;margin-top:5px;opacity:.8">أنت تتطور بسرعة مذهلة</div>`;
+      document.body.appendChild(el);
+      requestAnimationFrame(() => { el.style.transform = 'translate(-50%,-50%) scale(1)'; });
+      setTimeout(() => { el.style.transform = 'translate(-50%,-50%) scale(0)'; setTimeout(() => el.remove(), 400); }, 2500);
+    }
+
+    // ── Screen reader announcement ──
+    function announce(message) {
+      const el = document.createElement('div');
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      el.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;';
+      el.textContent = message;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1000);
+    }
+
+    // ── Achievements definition ──
+    const ACHIEVEMENTS = {
+      first_question: { id:'first_question', name:'أول خطوة 🎯', desc:'اسأل سؤالك الأول', icon:'🎯', points:10 },
+      ten_questions:  { id:'ten_questions',  name:'متعطش للمعرفة 🧠', desc:'اسأل 10 أسئلة', icon:'🧠', points:50 },
+      fifty_questions:{ id:'fifty_questions',name:'باحث متمرس 🔬', desc:'اسأل 50 سؤالاً', icon:'🔬', points:200 },
+      first_test:     { id:'first_test',     name:'الاختبار الأول 📝', desc:'أكمل أول اختبار', icon:'📝', points:30 },
+      quiz_master:    { id:'quiz_master',    name:'بطل الاختبارات 🏆', desc:'أكمل 10 اختبارات', icon:'🏆', points:200 },
+      streak_3:       { id:'streak_3',       name:'3 أيام متواصلة 🔥', desc:'زر المنصة 3 أيام متتالية', icon:'🔥', points:50 },
+      streak_7:       { id:'streak_7',       name:'أسبوع كامل ⭐', desc:'زر المنصة 7 أيام متتالية', icon:'⭐', points:150 },
+      level_5:        { id:'level_5',        name:'مستوى 5 🚀', desc:'وصلت للمستوى الخامس', icon:'🚀', points:100 },
+      boss_slayer:    { id:'boss_slayer',    name:'قاهر الـ Boss ⚔️', desc:'اهزم سؤال Boss Level', icon:'⚔️', points:100 },
+    };
+
+    // ── Show achievement toast popup ──
+    function showAchievementUnlock(ach) {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        position:fixed; bottom:100px; right:20px; z-index:9999;
+        background: linear-gradient(135deg,#0a2e1a,#142e1f);
+        border:1px solid var(--ng); border-radius:14px; padding:16px 20px;
+        display:flex; align-items:center; gap:14px; max-width:300px;
+        box-shadow:0 10px 30px rgba(0,230,118,0.3);
+        animation: slideInRight 0.4s ease;
+      `;
+      el.innerHTML = `
+        <div style="font-size:36px">${ach.icon}</div>
+        <div>
+          <div style="font-weight:700;color:var(--ng);font-size:14px">🔓 إنجاز جديد!</div>
+          <div style="font-weight:600;font-size:15px;margin-top:2px">${ach.name}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">${ach.desc}</div>
+          <div style="font-size:12px;color:var(--ng);margin-top:4px">+${ach.points} نقطة</div>
+        </div>
+      `;
+      document.body.appendChild(el);
+      announce(`إنجاز جديد: ${ach.name}`);
+      setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity 0.5s'; setTimeout(()=>el.remove(),500); }, 4000);
+    }
+
+    // ── Unlock achievement ──
+    function unlockAchievement(id) {
+      if (userProg.achievements.includes(id)) return;
+      const ach = ACHIEVEMENTS[id];
+      if (!ach) return;
+      userProg.achievements.push(id);
+      userProg.points += ach.points;
+      localStorage.setItem('olouq_gamification', JSON.stringify(userProg));
+      showAchievementUnlock(ach);
+    }
+
+    // ── Check all achievement conditions ──
+    function checkAchievements() {
+      const s = userProg.stats;
+      if (s.questionsAsked >= 1)  unlockAchievement('first_question');
+      if (s.questionsAsked >= 10) unlockAchievement('ten_questions');
+      if (s.questionsAsked >= 50) unlockAchievement('fifty_questions');
+      if (s.testsCompleted >= 1)  unlockAchievement('first_test');
+      if (s.testsCompleted >= 10) unlockAchievement('quiz_master');
+      if (userProg.streak >= 3)   unlockAchievement('streak_3');
+      if (userProg.streak >= 7)   unlockAchievement('streak_7');
+      if (userProg.level >= 5)    unlockAchievement('level_5');
+    }
+
+    // ── Add points (public API) ──
     window.addPoints = (amount, reason) => {
       userProg.points += amount;
       const newLevel = Math.floor(userProg.points / 500) + 1;
       if (newLevel > userProg.level) {
         userProg.level = newLevel;
-        showToast(`🎉 مبروووك! وصلت للمستوى ${newLevel}!`);
+        showLevelUpAnimation(newLevel);
       }
       localStorage.setItem('olouq_gamification', JSON.stringify(userProg));
       showToast(`+${amount} نقطة: ${reason}`);
+      announce(`حصلت على ${amount} نقطة`);
+      checkAchievements();
     };
+
+    // ── Render achievements list modal ──
+    window.renderAchievements = () => {
+      const $list = document.getElementById('achievements-list');
+      if (!$list) return;
+      $list.innerHTML = Object.values(ACHIEVEMENTS).map(ach => {
+        const unlocked = userProg.achievements.includes(ach.id);
+        return `<div style="
+          display:flex; align-items:center; gap:14px; padding:14px;
+          border-radius:10px; margin-bottom:10px;
+          background:${unlocked ? 'rgba(0,230,118,0.1)' : 'rgba(255,255,255,0.03)'};
+          border:1px solid ${unlocked ? 'rgba(0,230,118,0.3)' : 'rgba(255,255,255,0.05)'};
+          opacity:${unlocked ? '1' : '0.4'};
+        ">
+          <div style="font-size:28px">${unlocked ? ach.icon : '🔒'}</div>
+          <div>
+            <div style="font-weight:600;font-size:14px">${ach.name}</div>
+            <div style="font-size:12px;color:var(--txt2)">${ach.desc}</div>
+            <div style="font-size:11px;color:var(--ng);margin-top:3px">${ach.points} نقطة</div>
+          </div>
+          ${unlocked ? '<div style="margin-right:auto;color:var(--ng);font-size:18px">✓</div>' : ''}
+        </div>`;
+      }).join('') + `
+        <div style="text-align:center;padding:16px;border-top:1px solid rgba(255,255,255,0.05);margin-top:10px">
+          <div style="font-size:22px;font-weight:700;color:var(--ng)">${userProg.points} نقطة</div>
+          <div style="font-size:13px;color:var(--txt2)">المستوى ${userProg.level} • ${userProg.streak} يوم متواصل</div>
+        </div>`;
+    };
+
+    // ── Trigger achievements check on load ──
+    checkAchievements();
 
     init();
 
