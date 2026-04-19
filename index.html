@@ -4433,8 +4433,12 @@
           ? msg.content
           : DOMPurify.sanitize(marked.parse(content));
 
+        const avatarHtml = msg.role === 'user' 
+          ? `<img src="${state.user?.avatar || state.user?.picture || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'}" class="message-avatar" style="object-fit:cover; border:2px solid var(--accent-purple);">`
+          : `<div class="message-avatar">${avatar}</div>`;
+
         $message.innerHTML = `
-          <div class="message-avatar">${avatar}</div>
+          ${avatarHtml}
           <div class="message-content">
             <div class="message-text">${sanitizedContent}${imageHtml}</div>
             <div class="message-time">${msg.time || now()}</div>
@@ -4563,11 +4567,11 @@
         updateChatTitle(chat);
         renderMessages();
 
-        // ── Gamification: award points per question ──
-        if (window.addPoints) {
+        // ── Gamification: award points only if it's a subject-specific chat ──
+        if (window.addPoints && chat.subject) {
           userProg.stats.questionsAsked = (userProg.stats.questionsAsked || 0) + 1;
           localStorage.setItem('olouq_gamification', JSON.stringify(userProg));
-          window.addPoints(10, 'سؤال جديد');
+          window.addPoints(10, `سؤال في ${chat.subject}`);
         }
 
         // Clear pending image after success
@@ -5969,6 +5973,13 @@
       state.progress.sessions++;
       Storage.saveProgress(state.progress);
       renderAchievements();
+
+      // ── Gamification: Perfect Score ──
+      if (quizScore === currentQuiz.length && currentQuiz.length > 0) {
+        if (window.addPoints) {
+          window.addPoints(100, 'الدرجة النهائية في الامتحان! 💯');
+        }
+      }
     };
 
     document.getElementById('exam-m-next-btn')?.addEventListener('click', () => {
