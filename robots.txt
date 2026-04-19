@@ -1,5 +1,5 @@
 # robots.txt لموقع علوق الثانوية
-# https://olouq.vercel.app
+# https://olouq-ai.vercel.app
 
 # السماح لجميع محركات البحث
 User-agent: *
@@ -77,12 +77,12 @@ User-agent: DotBot
 Disallow: /
 
 # خريطة الموقع
-Sitemap: https://olouq.vercel.app/sitemap.xml
+Sitemap: https://olouq-ai.vercel.app/sitemap.xml
 
 # معلومات إضافية
-# Host: olouq.vercel.app
+# Host: olouq-ai.vercel.app
 
 # ملاحظات:
 # - يتم تحديث هذا الملف بانتظام
 # - آخر تحديث: 2024-04-18
-# - للاستفسارات: contact@olouq.vercel.app
+# - للاستفسارات: contact@olouq-ai.vercel.app

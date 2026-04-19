@@ -5,19 +5,19 @@
   
   <!-- الصفحة الرئيسية -->
   <url>
-    <loc>https://olouq.vercel.app/</loc>
+    <loc>https://olouq-ai.vercel.app/</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://olouq.vercel.app/og-image.png</image:loc>
+      <image:loc>https://olouq-ai.vercel.app/og-image.png</image:loc>
       <image:title>علوق الثانوية - منصة تعليمية ذكية</image:title>
     </image:image>
   </url>
 
   <!-- صفحة سياسة الخصوصية -->
   <url>
-    <loc>https://olouq.vercel.app/privacy.html</loc>
+    <loc>https://olouq-ai.vercel.app/privacy.html</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -25,7 +25,7 @@
 
   <!-- صفحة الشروط والأحكام -->
   <url>
-    <loc>https://olouq.vercel.app/terms.html</loc>
+    <loc>https://olouq-ai.vercel.app/terms.html</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -34,35 +34,35 @@
   <!-- صفحات الأدوات (يمكن إضافتها عندما تصبح صفحات منفصلة) -->
   <!-- 
   <url>
-    <loc>https://olouq.vercel.app/tools/calculator</loc>
+    <loc>https://olouq-ai.vercel.app/tools/calculator</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/tools/flashcards</loc>
+    <loc>https://olouq-ai.vercel.app/tools/flashcards</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/tools/quizzes</loc>
+    <loc>https://olouq-ai.vercel.app/tools/quizzes</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/tools/pomodoro</loc>
+    <loc>https://olouq-ai.vercel.app/tools/pomodoro</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/tools/periodic-table</loc>
+    <loc>https://olouq-ai.vercel.app/tools/periodic-table</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -72,42 +72,42 @@
   <!-- صفحات المواد الدراسية (عند إضافتها) -->
   <!--
   <url>
-    <loc>https://olouq.vercel.app/subjects/mathematics</loc>
+    <loc>https://olouq-ai.vercel.app/subjects/mathematics</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/subjects/physics</loc>
+    <loc>https://olouq-ai.vercel.app/subjects/physics</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/subjects/chemistry</loc>
+    <loc>https://olouq-ai.vercel.app/subjects/chemistry</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/subjects/biology</loc>
+    <loc>https://olouq-ai.vercel.app/subjects/biology</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/subjects/english</loc>
+    <loc>https://olouq-ai.vercel.app/subjects/english</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/subjects/arabic</loc>
+    <loc>https://olouq-ai.vercel.app/subjects/arabic</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -117,21 +117,21 @@
   <!-- صفحات المدونة (عند إضافتها) -->
   <!--
   <url>
-    <loc>https://olouq.vercel.app/blog</loc>
+    <loc>https://olouq-ai.vercel.app/blog</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/blog/study-tips</loc>
+    <loc>https://olouq-ai.vercel.app/blog/study-tips</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://olouq.vercel.app/blog/exam-preparation</loc>
+    <loc>https://olouq-ai.vercel.app/blog/exam-preparation</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -140,7 +140,7 @@
 
   <!-- صفحة حول المنصة -->
   <url>
-    <loc>https://olouq.vercel.app/about.html</loc>
+    <loc>https://olouq-ai.vercel.app/about.html</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -148,7 +148,7 @@
 
   <!-- صفحة الاتصال -->
   <url>
-    <loc>https://olouq.vercel.app/contact.html</loc>
+    <loc>https://olouq-ai.vercel.app/contact.html</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -156,7 +156,7 @@
 
   <!-- صفحة الأسئلة الشائعة -->
   <url>
-    <loc>https://olouq.vercel.app/faq.html</loc>
+    <loc>https://olouq-ai.vercel.app/faq.html</loc>
     <lastmod>2024-04-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
